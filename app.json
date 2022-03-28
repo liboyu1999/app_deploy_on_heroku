@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "../assets/dili.png",
+          "color": "#ffffff",
+          "sounds": ["../assets/SpongeSound.wav"]
+        }
+      ]
+    ],
+   "name": "Curastone",
+   "icon": "./app/assets/icon.png",
+   "version": "1.0.0",
+   "slug": "Curastone",
+   "ios": {
+     "bundleIdentifier": "com.yourcompany.yourappname",
+     "buildNumber": "1.0.0"
+   },
+   "android": {
+     "package": "com.yourcompany.yourappname",
+     "versionCode": 1
+   }
+   ,"updates":{
+     "fallbackToCacheTimeout":0
+   }
+  }
+}
+
