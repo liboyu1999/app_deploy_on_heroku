@@ -1,13 +1,28 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, Button, SafeAreaView, Alert } from 'react-native';
-
 import AppText from "../components/AppText";
 import AppButton from '../components/AppButton';
 import ListItem from '../components/ListItem';
 import Screen from '../components/Screen';
-export function FriendList({navigation}) {
-    return(
+import { db, doc, setDoc } from "../../firebase"; 
+import { collection, addDoc ,getDocs} from "firebase/firestore"; 
+import { async } from '@firebase/util';
 
+
+function FriendList({navigation}) {
+    // const oneButtonGenerateFriendList = async(e) => {
+    //     try {
+    //         const docRef = await addDoc(collection(db, "users"), {
+    //           name: "Ada"
+    //         });
+    //         console.log("friend ", docRef.id);
+    //       } catch (error) {
+    //         console.error("Error adding document: ", e);
+    //       }
+    // }
+
+
+    return(
         <SafeAreaView style={styles.container}>
             <View style={styles.listContainer} >
                 <View style={styles.listElement}>
@@ -47,7 +62,7 @@ export function FriendList({navigation}) {
                         image = {require("../assets/fox.png")}
                     />
                     <View style={styles.buttonContainer}>
-                        <Button title="Button4"  />
+                        <Button title="Button4" onPress={oneButtonLogFriendList} />
                     </View>
                 </View>
 
@@ -58,7 +73,7 @@ export function FriendList({navigation}) {
                         
                     />
                     <View style={styles.buttonContainer}>
-                        <Button title="Button5"  onPress={createThreeButtonAlert}/>
+                        <Button title="Button5"  onPress={oneButtonGenerateFriendList}/>
                     </View>
                 </View>
 
@@ -73,6 +88,33 @@ export function FriendList({navigation}) {
     );
 };
 
+
+
+// database read
+
+
+const oneButtonLogFriendList = async () => {
+const querySnapshot = await getDocs(collection(db, "users"));
+querySnapshot.forEach((doc) => {
+    // doc.data() is never undefined for query doc snapshots
+    console.log(doc.id, " => ", doc.data());
+  });
+}
+
+
+
+
+//example friendlist
+
+// const usersCollectionRef = collection(db, 'users');
+// const oneButtonGenerateFriendList = async () => {
+// await setDoc(doc(friendlistRef, "Boyu"), {
+//     name: "Boyu"  });
+// await setDoc(doc(friendlistRef, "Yuewu"), {
+//     name: "Yuewu"});
+// await setDoc(doc(friendlistRef, "Xiami"), {
+//     name: "Xiami"});
+// }
 
 const createThreeButtonAlert = () =>
 Alert.alert(
@@ -91,6 +133,22 @@ Alert.alert(
     { text: "OK", onPress: () => console.log("OK Pressed") }
   ]
 );
+
+const oneButtonGenerateFriendList = async(e) => {
+    try {
+        const docRef = await addDoc(collection(db, "users"), {
+          name: "Ada"
+        });
+        console.log("friend ", docRef.id);
+      } 
+      catch (error) {
+        console.error("Error adding document: ", e);
+      }
+}
+
+
+
+
 const styles = StyleSheet.create({
     buttonContainer: {
         
