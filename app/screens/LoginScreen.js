@@ -6,25 +6,43 @@ import AppTextInput from '../components/AppTextInput';
 import AppButton from '../components/AppButton';
 import {authentication} from "../../firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import {db} from '../../firebase';
+import { collection, addDoc,getDocs } from "firebase/firestore"; 
 function LoginScreen({navigation}) {
+
+
     const [email, setEmail]=useState();
     const [password, setPassword]=useState();
     const [user, setUser] = useState();
 
+
+
+
+    
     const SignIn =  async() => {
-    let user;
-    try{
-        user = await signInWithEmailAndPassword(authentication, email, password)
-    }
-    catch(error) 
-    {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log(errorCode,errorMessage);
-     };
-     console.log(user);
-  setUser(user);
-}
+//     let user;
+//     try{
+//         user = await signInWithEmailAndPassword(authentication, email, password)
+//     }catch(error)   
+//     {
+//         const errorCode = error.code;
+//         const errorMessage = error.message;
+//         Alert.alert(errorMessage);
+//         console.log(errorCode,errorMessage);
+//      };
+
+//   setUser(user);
+    // const querySnapshot = await getDocs(collection(db, "users"));
+    // //   let Listing=[];
+    //   querySnapshot.forEach((doc) => {
+        
+    //     // doc.data() is never undefined for query doc snapshots
+    //     Listing.push(doc.data());
+    //   });
+    //   console.log(Listing);
+      
+  }
+
 
     return (
     <Screen style = {styles.container}>
@@ -52,7 +70,8 @@ function LoginScreen({navigation}) {
         <AppButton title =  "Login" onPress={
 
                 () => {
-                navigation.navigate("Friend");
+                    // SignIn();
+                    navigation.navigate("Friend");
             }
 
              
@@ -77,5 +96,5 @@ const styles = StyleSheet.create({
         marginBottom:20,
     }
 })
-
 export default LoginScreen;
+

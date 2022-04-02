@@ -6,6 +6,7 @@ import FriendList from "../screens/FriendList";
 import LoginScreen from "../screens/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen";
 import Notification from "../api/Notification";
+import AddFriend from "../screens/AddFriend";
 const Stack = createStackNavigator();
 
 const AuthNavigator = () => (
@@ -15,6 +16,7 @@ const AuthNavigator = () => (
         <Stack.Screen name = "Login" component  = {LoginScreen} />
         <Stack.Screen name = "Register" component  = {RegisterScreen} />
         <Stack.Screen name = "Notification" component  = {Notification} />
+        <Stack.Screen name = "AddFriend" component  = {AddFriend} />
     </Stack.Navigator>
 );
 

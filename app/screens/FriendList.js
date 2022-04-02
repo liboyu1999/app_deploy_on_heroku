@@ -1,200 +1,172 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, Button, SafeAreaView, Alert } from 'react-native';
+import React, { useEffect , useState} from 'react';
+import { View, Text, Image, StyleSheet, Button, SafeAreaView, Alert, ScrollView } from 'react-native';
+// import {ListItem} from 'react-native-elements'
 import AppText from "../components/AppText";
 import AppButton from '../components/AppButton';
 import ListItem from '../components/ListItem';
 import Screen from '../components/Screen';
-import { db, doc, setDoc } from "../../firebase"; 
-import { collection, addDoc ,getDocs} from "firebase/firestore"; 
-import { async } from '@firebase/util';
+import { collection, getDocs } from "firebase/firestore";
+import {db} from '../../firebase';
 
 
-function FriendList({navigation}) {
-    // const oneButtonGenerateFriendList = async(e) => {
-    //     try {
-    //         const docRef = await addDoc(collection(db, "users"), {
-    //           name: "Ada"
-    //         });
-    //         console.log("friend ", docRef.id);
-    //       } catch (error) {
-    //         console.error("Error adding document: ", e);
-    //       }
-    // }
+
+
+function FriendList ({navigation}) {
+    const [Listing,setListing] = useState([])
+    useEffect(() => { 
+        const query = async() =>{
+        const querySnapshot =  await  getDocs(collection(db, "users"));
+        let Listing = [];
+        querySnapshot.forEach((doc) => {
+            // doc.data() is never undefined for query doc snapshots
+            // console.log("0", doc.data());
+            Listing.push(doc.data());
+          });
+          // console.log("1", Listing);
+          setListing(Listing);
+       }
+       query()
+
+    },[])
+    // console.log("2", Listing);
 
 
     return(
-        <SafeAreaView style={styles.container}>
-            <View style={styles.listContainer} >
-                <View style={styles.listElement}>
-                    <ListItem 
-                        title = "Friend1"
-                        image = {require("../assets/fox.png")}
-                    />
 
-                    <View style={styles.buttonContainer}>
-                        <Button title="Button1" onPress={() => {navigation.navigate("Notification")}}/>
-                    </View>
-                </View>
+<SafeAreaView style={styles.container}>
+                <View styles={styles.listContainer}>
+    
 
-                <View style={styles.listElement}>
-                    <ListItem 
-                        title = "Friend2"
-                        image = {require("../assets/fox.png")}
-                    />
-                    <View style={styles.buttonContainer}>
-                        <Button title="Button2"  />
-                    </View>
-                </View>
+     
+<ScrollView>
+  
+{
+   Listing.map((l, i) => 
+    
+        
+   (<ListItem
+        key={i}
+    
+        title={l.Name}
+        image = {require("../assets/fox.png")}
+      />
+    )
+)
+   } 
 
-                <View style={styles.listElement}>
-                    <ListItem 
-                        title = "Friend3"
-                        image = {require("../assets/fox.png")}
-                    />
-                    <View style={styles.buttonContainer}>
-                        <Button title="Button3"  />
-                    </View>
-                </View>
+  
+</ScrollView>
 
-                <View style={styles.listElement}>
-                    <ListItem 
-                        title = "Friend4"
-                        image = {require("../assets/fox.png")}
-                    />
-                    <View style={styles.buttonContainer}>
-                        <Button title="Button4" onPress={oneButtonLogFriendList} />
-                    </View>
-                </View>
 
-                <View style={styles.listElement}>
-                    <ListItem 
-                        title = "Friend5"
-                        image = {require("../assets/fox.png")}
-                        
-                    />
-                    <View style={styles.buttonContainer}>
-                        <Button title="Button5"  onPress={oneButtonGenerateFriendList}/>
-                    </View>
-                </View>
 
-            </View>
 
+                    {/* <View style={styles.buttonContainer}>
+                        <Button title="Button1" onPress={() => {createThreeButtonAlert}}/>
+                    </View> */}
             
+         
 
-            
-            
+
+
+
+      { <Button
+        title="Add Friend"
+        onPress={() => 
+        navigation.navigate("AddFriend")
+        } />  
+
+      }
+        </View>
+       
         </SafeAreaView>
 
-    );
-};
+    )
 
-
-
-// database read
-
-
-const oneButtonLogFriendList = async () => {
-const querySnapshot = await getDocs(collection(db, "users"));
-querySnapshot.forEach((doc) => {
-    // doc.data() is never undefined for query doc snapshots
-    console.log(doc.id, " => ", doc.data());
-  });
 }
 
-
-
-
-//example friendlist
-
-// const usersCollectionRef = collection(db, 'users');
-// const oneButtonGenerateFriendList = async () => {
-// await setDoc(doc(friendlistRef, "Boyu"), {
-//     name: "Boyu"  });
-// await setDoc(doc(friendlistRef, "Yuewu"), {
-//     name: "Yuewu"});
-// await setDoc(doc(friendlistRef, "Xiami"), {
-//     name: "Xiami"});
-// }
-
-const createThreeButtonAlert = () =>
-Alert.alert(
-  "I need SpongeBob!",
-  "I need SpongeBob",
-  [
-    {
-      text: "Ask me later",
-      onPress: () => console.log("Ask me later pressed")
-    },
-    {
-      text: "Cancel",
-      onPress: () => console.log("Cancel Pressed"),
-      style: "cancel"
-    },
-    { text: "OK", onPress: () => console.log("OK Pressed") }
-  ]
-);
-
-const oneButtonGenerateFriendList = async(e) => {
-    try {
-        const docRef = await addDoc(collection(db, "users"), {
-          name: "Ada"
-        });
-        console.log("friend ", docRef.id);
-      } 
-      catch (error) {
-        console.error("Error adding document: ", e);
-      }
-}
 
 
 
 
 const styles = StyleSheet.create({
-    buttonContainer: {
-        
-        
-       
-        borderRadius: 10,
-        shadowColor: "grey",
-        shadowOffset: {width: 10, height: 10},
-        shadowOpacity: 1,
-       
-    },
+    buttonContainer: { 
+        borderRadius: 10, 
+  shadowColor: "grey", 
+  shadowOffset: {width: 10, height: 10}, 
+  shadowOpacity: 1, 
+    }, 
+    container: { 
+  flex: 1, 
+  backgroundColor: "#f9e955", 
+  alignItems: "center", 
+  justifyContent: "center", 
+  }, 
+    listElement: { 
+  flexDirection: "row", 
+  padding:90, 
+  }, 
+    listContainer: { 
+  flex: 0.5, 
+  backgroundColor: "#f9e955", 
+  right: 100, 
+  justifyContent: "space-evenly", 
+  padding : 10, 
+  }, 
+    image: { 
+  width: 70, 
+  height: 70, 
+  borderRadius: 35, 
+    }, 
+    textElement: { 
+    }, 
+    userContainer: { 
+  marginVertical: 40, 
+    } 
 
-    container: {
-        flex: 1,
-        backgroundColor: "#f9e955",
-        alignItems: "center",
-        justifyContent: "center",
-    },
+    // container: {
+    //   flex: 1,
+    //   justifyContent: 'center',
+    //   marginHorizontal: 16,
+    // },
+    // title: {
+    //   textAlign: 'center',
+    //   marginVertical: 8,
+    // },
+    // fixToText: {
+    //   flexDirection: 'row',
+    //   justifyContent: 'space-between',
+    // },
+    // separator: {
+    //   marginVertical: 8,
+    //   borderBottomColor: '#737373',
+    //   borderBottomWidth: StyleSheet.hairlineWidth,
+    // },
+  });
 
-    listElement: {
-        flexDirection: "row",
-        padding:90,
-    },
 
-    listContainer: {
-        flex: 0.5,
-        backgroundColor: "#f9e955",
-        right: 100,
-        justifyContent: "space-evenly",
-        padding : 10,
-    },
+// const Listing = [
+//   {
+//     id: "Amy",
+//     Email: "aaa111@gmail.com",
+//     PhoneNumber: 8888888888,
+//   },
+//   {
+//     id: "Allen",
+//     Email: "ccc333@gmail.com",
+//     PhoneNumber: 6666666666,
+//   },
+//   {
+//     id: "Alex",
+//     Email: "bbb222@gmail.com",
+//     PhoneNumbe: 7777777777,
+//   },
+//   {
+//     id: "Andy",
+//     Email: "ddd444@gmail.com",
+//     PhoneNumbe: 5555555555,
+//   }
+// ]
 
-    image: {
-        width: 70,
-        height: 70,
-        borderRadius: 35,
 
-    },
 
-    textElement: {
-       
-    },
-
-    userContainer: {
-        marginVertical: 40,
-
-    }
-})
 export default FriendList;

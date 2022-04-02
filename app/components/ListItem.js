@@ -1,16 +1,17 @@
-import React from 'react';
-import { View, StyleSheet, Text, Image } from 'react-native';
+import React, {useState} from 'react';
+import { View, StyleSheet, Text, Image, Button } from 'react-native';
 
 import AppText from './AppText';
 
 function ListItem({ title, image }) {
-
+[popup,Setpopup]=useState(false)
     return(
         <View style={styles.container}>
             <View>
                 <Image style={styles.image} source={image} />
             </View>
             <AppText style={styles.title}>{title}</AppText>
+            <Button  title ="Send notification" />
         </View>
     );
 }
