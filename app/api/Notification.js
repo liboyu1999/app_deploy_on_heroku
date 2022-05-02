@@ -1,7 +1,12 @@
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
+import * as Permissions from 'expo-permissions';
+
+//
+
+//
 import React, { useState, useEffect, useRef } from 'react';
-import { Text, View, Button, Platform } from 'react-native';
+import { Text, View, Button, Platform, Alert } from 'react-native';
 import Screen from '../components/Screen';
 import AppTextInput from '../components/AppTextInput';
 import AppButton from '../components/AppButton';
@@ -13,15 +18,75 @@ Notifications.setNotificationHandler({
   }),
 });
 
+
+
 export default function App() {
   const [expoPushToken, setExpoPushToken] = useState('');
   const [notification, setNotification] = useState(false);
   const notificationListener = useRef();
   const responseListener = useRef();
 
-  useEffect(() => {
-    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+  const schedulePushNotification = async() => {
 
+  
+    const expoPushToken = await Notifications.getExpoPushTokenAsync({
+      experienceId: '@username/example',
+      development: true
+    });
+
+    // const chunk = Expo.chunkPushNotifications({
+    //   to: "ExponentPushToken[__teLJOMqatQdNw2myYn1r]",
+    //   sound: 'default',
+    //   body: 'This is a test notification',
+    //   data: { withSome: 'data' },
+    // });
+    try{
+      fetch("https://exp.host/--/api/v2/push/send/", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Accept-Encoding": "gzip, deflate",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: "ExponentPushToken[__teLJOMqatQdNw2myYn1r]",
+        data: { extraData: "Some data in the push notification" , "_displayInForeground":true},
+        title: "ni hao",
+        body: "Howdy",
+      }),
+    });
+  
+    }
+    catch(err){
+      console.log('test err', err);
+    }
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+      }),
+    });
+
+    // Notifications.scheduleNotificationAsync({
+    //   content: {
+    //     title: 'Look at that notification',
+    //     body: "I'm so proud of myself!",
+    //   },
+    //   trigger: { seconds: 1},
+    // });
+
+    // await Notifications.scheduleNotificationAsync({
+    //   content: {
+    //     icon: "dili.png",
+    //     sound: 'SpongeSound.wav', 
+    //     title: "You Received a Hard Push",
+    //     body: 'From SpongeBob',
+    //     data: { data: 'goes here' },
+    //   },
+    //   trigger: { seconds: 1},
+    // });
+ 
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
       setNotification(notification);
     });
@@ -34,7 +99,24 @@ export default function App() {
       Notifications.removeNotificationSubscription(notificationListener.current);
       Notifications.removeNotificationSubscription(responseListener.current);
     };
-  }, []);
+  }
+
+  // const pushButton = () => {
+  //   registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+
+  //   notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+  //     setNotification(notification);
+  //   });
+
+  //   responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+  //     console.log(response);
+  //   });
+
+  //   return () => {
+  //     Notifications.removeNotificationSubscription(notificationListener.current);
+  //     Notifications.removeNotificationSubscription(responseListener.current);
+  //   };
+  // }
 
   return (
     <Screen
@@ -49,6 +131,7 @@ export default function App() {
         <Text>Title: {notification && notification.request.content.title} </Text>
         <Text>Body: {notification && notification.request.content.body}</Text>
         <Text>Data: {notification && JSON.stringify(notification.request.content.data)}</Text>
+        <Text>Push token: {expoPushToken}</Text>
       </View>
       <AppButton 
         
@@ -62,18 +145,6 @@ export default function App() {
   );
 }
 
-async function schedulePushNotification() {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      icon: "dili.png",
-      sound: 'SpongeSound.wav', 
-      title: "You Received a Hard Push",
-      body: 'From SpongeBob',
-      data: { data: 'goes here' },
-    },
-    trigger: { seconds: 1},
-  });
-}
 
 async function registerForPushNotificationsAsync() {
   let token;
@@ -89,7 +160,8 @@ async function registerForPushNotificationsAsync() {
       return;
     }
     token = (await Notifications.getExpoPushTokenAsync()).data;
-    console.log(token);
+    setExpoPushToken(token);
+    
   } else {
     alert('Must use physical device for Push Notifications');
   }
