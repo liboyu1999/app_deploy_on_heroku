@@ -1,172 +1,266 @@
-import React, { useEffect , useState} from 'react';
-import { View, Text, Image, StyleSheet, Button, SafeAreaView, Alert, ScrollView } from 'react-native';
-// import {ListItem} from 'react-native-elements'
+import React, {useEffect, useState} from 'react';
+import { ImageBackground, View, Text, Image, StyleSheet, Button, SafeAreaView,ScrollView, Alert } from 'react-native';
+import { addDoc, query, collection, where, getDocs, orderBy, startAt, endAt, doc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import {db} from '../../firebase';
 import AppText from "../components/AppText";
 import AppButton from '../components/AppButton';
 import ListItem from '../components/ListItem';
 import Screen from '../components/Screen';
-import { collection, getDocs } from "firebase/firestore";
-import {db} from '../../firebase';
+import NotificationPopup from '../components/NotificationPopup';
+
+import { Notification } from '../api/Notification';
+import {setUserRedux} from '../redux/usersAction';
+import {connect} from 'react-redux';
+import { useSelector } from 'react-redux';
+import {bindActionCreators} from 'redux';
+import {createStructuredSelector} from 'reselect';
+import {getUser} from '../redux/usersReducer';
 
 
+function FriendList({navigation}, props) {
 
+  // temp state
+  // ---start---
 
-function FriendList ({navigation}) {
-    const [Listing,setListing] = useState([])
-    useEffect(() => { 
-        const query = async() =>{
-        const querySnapshot =  await  getDocs(collection(db, "users"));
-        let Listing = [];
-        querySnapshot.forEach((doc) => {
-            // doc.data() is never undefined for query doc snapshots
-            // console.log("0", doc.data());
-            Listing.push(doc.data());
-          });
-          // console.log("1", Listing);
-          setListing(Listing);
-       }
-       query()
+  const [friendRequest, setFriendRequest] = useState([]);
+  const [friendList, setFriendList] = useState([]);
+  const [isSwitchEnabled, toggleSwitch] = useState(false)
+  // const [App, setAppList] = useState([]);
+  const userRef = collection(db,'users');
 
-    },[])
-    // console.log("2", Listing);
+  const [userId, setUserId] = useState();
+  // ---end---
 
+  // onsnapshot test
+  // ---start---
 
-    return(
-
-<SafeAreaView style={styles.container}>
-                <View styles={styles.listContainer}>
-    
-
-     
-<ScrollView>
+  const profileUser = useSelector(getUser);   // popup123@gmail.com
   
-{
-   Listing.map((l, i) => 
-    
+  const q = query(collection(db, "users"), where("email", "==", profileUser));
+ 
+  const onChangeDB = onSnapshot(q, (snapshot) => {
+    snapshot.docChanges().forEach((change) => {
+      if (change.type === "added") {
+        //console.log("New city: ", "sucss");
         
-   (<ListItem
-        key={i}
-    
-        title={l.Name}
-        image = {require("../assets/fox.png")}
-      />
-    )
-)
-   } 
-
-  
-</ScrollView>
-
-
-
-
-                    {/* <View style={styles.buttonContainer}>
-                        <Button title="Button1" onPress={() => {createThreeButtonAlert}}/>
-                    </View> */}
-            
-         
-
-
-
-
-      { <Button
-        title="Add Friend"
-        onPress={() => 
-        navigation.navigate("AddFriend")
-        } />  
-
       }
-        </View>
-       
-        </SafeAreaView>
+      if (change.type === "modified") {
+         // console.log("Modified city: ", change.doc.data().friendList);
+          setFriendList(change.doc.data().friendList)
+          setFriendRequest(change.doc.data().friendRequests)
+          
+      }
+      // if (change.type === "removed") {
+      //     console.log("Removed city: ", change.doc.data());
+      // }
+      
+    });
+  });
+  // ---end---
 
-    )
+ 
 
-}
+  const listFriend = async() => {
+    const userQ = query(userRef, where("email","==",profileUser)); 
+    const querySnapShot = await getDocs(userQ);
 
+    let friendLists = [];
+    let friendRequests = [];
+  
+    querySnapShot.forEach((doc) => {
+      friendLists = doc.data().friendList;
+      friendRequests = doc.data().friendRequests;
+     
+      setUserId(doc.id);
+    })
+    
+    setFriendRequest(friendRequests);
+    
+    //console.log('friendlist', friendLists);
+    const pushTokenQ = query(userRef, where("email","in",friendLists));
+    let tokenSnapShot;
+    try{
+      tokenSnapShot  = await getDocs(pushTokenQ);
+    }catch(err)
+    {
+      cosnole.log(err);
+    }
 
+    //console.log(pushTokenQ, "this is pushTokenQ")
+    const friends = []
+    tokenSnapShot.forEach((doc) => {
 
+      const username = doc.data().username;
+      const pushToken = doc.data().pushToken;
+      
+      friends.push({
+        username,
+        pushToken
+      })
+    })
+    setFriendList(friends);
+  };
+
+  useEffect(() => 
+  {
+    // console.log("testz");
+    listFriend();
+    console.log('frinedz list', friendList);
+    onChangeDB();
+  }
+  ,[props])
+
+  const handleAddition = async(data) => {
+    const newList = friendRequest.filter(f => f !== data);
+    const newFriendList = [...friendList];
+    setFriendRequest(newList);
+
+    newFriendList.push({data})
+    setFriendList(newFriendList);
+    
+   
+    const docRef = doc(db, "users", userId)
+    await updateDoc(docRef,{
+      friendRequests: newList,
+      friendList: arrayUnion({data})
+    })
+
+    // sync friendlist for the pp who initiate the request
+    const snapshotOrigin = query(userRef,where('username', '==', data));
+    const userDocOrigin=await getDocs(snapshotOrigin);
+    let idOrigin;
+    userDocOrigin.forEach((doc) => {
+        
+      res=doc.data();
+      idOrigin = doc.id
+
+    });
+      
+    const docRefOrigin = doc(db, "users", idOrigin);
+      await updateDoc(docRefOrigin,{
+          friendList: arrayUnion(profileUser)
+      })
+    
+  }
+
+  const handleDeletion = async(data) => {
+  
+    const newList = friendRequest.filter(f => f.username !== data);
+    const newFriendList = friendList.filter(f => f.username !== data);
+    setFriendRequest(newList);
+    setFriendList(newFriendList);
+    const docRef = doc(db, "users", userId)
+    try{
+    await updateDoc(docRef,{
+      friendRequests: newList,
+      friendList: arrayRemove({data})
+    })}catch(err){
+      console.log(err);
+    }
+    console.log(newFriendList);
+    
+  }
+
+ 
+  return(
+
+    <ImageBackground 
+                   
+    source = {require("../assets/wiguna.jpg")}
+    style = {styles.background}
+>
+    
+    <SafeAreaView style={styles.container}>
+      
+      <View>
+        <View style={{left:340, top:40, position:'absolute' }}><NotificationPopup friendQueue={friendRequest} onAdd={handleAddition} onDelete={handleDeletion} /></View>
+        <ScrollView style={{top:100, width:360, height:520}}>
+          {
+            friendList.map((l, i) =>       
+              (<ListItem
+                key={i}
+                title={l.username}
+                name={l.name}
+                onDelete={handleDeletion}
+                image = {require("../assets/ahmed.jpg")}
+                style={styles.ListItem}
+
+                
+                
+              />)
+            )
+            
+          }
+        </ScrollView>
+
+        {/* <Button
+          title="Add Friend"
+          onPress={() => navigation.navigate("AddFriend")}
+        /> */}
+      </View>
+
+    </SafeAreaView>
+    </ImageBackground>
+
+  );
+
+        }
 
 
 const styles = StyleSheet.create({
-    buttonContainer: { 
-        borderRadius: 10, 
-  shadowColor: "grey", 
-  shadowOffset: {width: 10, height: 10}, 
-  shadowOpacity: 1, 
-    }, 
-    container: { 
-  flex: 1, 
-  backgroundColor: "#f9e955", 
-  alignItems: "center", 
-  justifyContent: "center", 
-  }, 
-    listElement: { 
-  flexDirection: "row", 
-  padding:90, 
-  }, 
-    listContainer: { 
-  flex: 0.5, 
-  backgroundColor: "#f9e955", 
-  right: 100, 
-  justifyContent: "space-evenly", 
-  padding : 10, 
-  }, 
-    image: { 
-  width: 70, 
-  height: 70, 
-  borderRadius: 35, 
-    }, 
-    textElement: { 
-    }, 
-    userContainer: { 
-  marginVertical: 40, 
-    } 
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      marginHorizontal: 16,
+      flexDirection: "row",
+      padding: 15,
+    },
+    title: {
+      textAlign: 'center',
+      marginVertical: 8,
+    },
+    fixToText: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },  
+    separator: {
+      marginVertical: 8,
+      borderBottomColor: '#737373',
+      borderBottomWidth: StyleSheet.hairlineWidth,
 
-    // container: {
-    //   flex: 1,
-    //   justifyContent: 'center',
-    //   marginHorizontal: 16,
-    // },
-    // title: {
-    //   textAlign: 'center',
-    //   marginVertical: 8,
-    // },
-    // fixToText: {
-    //   flexDirection: 'row',
-    //   justifyContent: 'space-between',
-    // },
-    // separator: {
-    //   marginVertical: 8,
-    //   borderBottomColor: '#737373',
-    //   borderBottomWidth: StyleSheet.hairlineWidth,
-    // },
+    },
+    container: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center"
+    },
+    background:{
+      flex:1,
+      justifyContent: "flex-end",
+      backgroundColor:"transparent",
+      alignItems: "center"
+     },
+     ListItem:{
+      height: 40,
+      margin: 20,
+      width: 200,
+      borderWidth: 0,
+      padding: 10,
+      backgroundColor:"white",
+      opacity:0.75
+     },
   });
 
-
-// const Listing = [
-//   {
-//     id: "Amy",
-//     Email: "aaa111@gmail.com",
-//     PhoneNumber: 8888888888,
-//   },
-//   {
-//     id: "Allen",
-//     Email: "ccc333@gmail.com",
-//     PhoneNumber: 6666666666,
-//   },
-//   {
-//     id: "Alex",
-//     Email: "bbb222@gmail.com",
-//     PhoneNumbe: 7777777777,
-//   },
-//   {
-//     id: "Andy",
-//     Email: "ddd444@gmail.com",
-//     PhoneNumbe: 5555555555,
-//   }
-// ]
+const mapStateToProps = (state) => {
+  const { users } = state
+  return { users }
+};
 
 
+const mapDispatchToProps = dispatch => (
+  bindActionCreators({
+    setUserRedux,
+  }, dispatch)
+);
 
-export default FriendList;
+export default  connect(mapStateToProps, mapDispatchToProps)(FriendList);
