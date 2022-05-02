@@ -1,46 +1,70 @@
-import React from 'react';
-import { Image, ImageBackground,StyleSheet,Text,View ,button} from 'react-native';
-import AppButton from '../components/AppButton';
+import * as React from 'react';
+import { View, StyleSheet, Button, Text,  KeyboardAvoidingView} from 'react-native';
+import { Video, AVPlaybackStatus } from 'expo-av';
+
 function WelcomeScreen({navigation}) {
+  const video = React.useRef(null);
 
-    return(
-        <ImageBackground 
-           
-            source = {require("../assets/sponge.jpeg")}
-            style = {styles.background}
-        >
-            <Text></Text>
-            <Image style = {styles.logo} source = {require("../assets/Ping_logo.png")} />
-            <View style = {styles.buttonsContainer}>
-              <AppButton title = "Login" onPress = {()=> navigation.navigate("Login")}/>
-              <AppButton title = "Register" color = '#87cefa'  onPress = {()=> navigation.navigate("Register")}/>
+  React.useEffect(()=> {
+    setTimeout(()=>{
+                navigation.navigate('Login')
+            },5000)//定时两秒后自动跳转到主页.
 
-            </View>
-            
-        </ImageBackground>
-    )
+},[])
+
+  return (
+    <View style={styles.container}>
+      <Video
+        ref={video}
+        style={styles.video}
+        source={{
+          uri: 'file:///Users/wuyue/Desktop/%E5%B0%8F%E9%83%8E%E7%9A%84Video/production%20ID_4628795.mp4',
+        }}
+        rate={1}
+        shouldPlay={true}
+      isLooping={true}
+      muted={true}
+    
+        resizeMode="cover"
+    
+        
+      />
+
+{/* <KeyboardAvoidingView behavior='padding' style={styles.container}>
+
+
+<View style={styles.loginContainer}>
+
+
+</View>
+</KeyboardAvoidingView> */}
+  
+    </View>
+  );
 }
-const styles = StyleSheet.create({
-    background:{
-        flex:1,
-        justifyContent:"flex-end",
-        alignItems:"center",
-    },
-    buttonsContainer:{
-        padding: 20,
-        width:"100%",
 
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: 'transparent',
     },
-    logo: {
-        width:230,
-        height:230,
-        position: "absolute",
-        top: 70,
+    video: {
+        position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
     },
-    RegisterButton: {
-        width:"100%" ,
-        height:70,
-        backgroundColor:'#87cefa',
+    loginContainer: {
+        alignItems: 'center',
+        flexGrow: 1,
+        justifyContent: 'center',
+      },
+    buttons: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
-});
-export default WelcomeScreen;
+  });
+
+  export default WelcomeScreen;
